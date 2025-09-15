@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exclusive Wallet - Carteira Descentralizada</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        /* Estilos base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f9f5f0 0%, #faf0f4 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #3a3a3a;
+        }
+        
+        .wallet-container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 40px 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            position: relative;
+        }
+        
+        /* Elementos de luxo sutis */
+        .wallet-container:before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            z-index: -1;
+            background: linear-gradient(45deg, #ffd70020, #ff69b415, #ffd70010);
+            border-radius: 1px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .logo {
+            text-align: center;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: #2b2b2b;
+            text-transform: uppercase;
+        }
+        
+        .logo span {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 8px;
+            margin-top: 5px;
+            color: #888;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 14px 15px;
+            border: 1px solid #e0e0e0;
+            background: #fcfcfc;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #d4af37;
+            background: #fff;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+        }
+        
+        .password-group {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: #fcfcfc;
+            border-radius: 0;
+            border: 1px solid #e0e0e0;
+            padding: 14px 15px;
+            transition: all 0.3s;
+        }
+        
+        .password-group:focus-within {
+            border-color: #d4af37;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+        }
+        
+        .password-group input {
+            flex-grow: 1;
+            border: none;
+            background: none;
+            padding: 0;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .password-group span {
+            color: #888;
+            margin-right: 5px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #d4af37, #f4e4b8);
+            color: #2a2a2a;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #888;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn-secondary:hover {
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+        
+        .btn-small {
+            width: auto;
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+        
+        .divider {
+            text-align: center;
+            position: relative;
+            margin: 25px 0;
+            font-size: 11px;
+            color: #999;
+            letter-spacing: 0.5px;
+        }
+        
+        .divider:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #eee;
+            z-index: 1;
+        }
+        
+        .divider span {
+            background: #fff;
+            position: relative;
+            z-index: 2;
+            padding: 0 15px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .footer p {
+            font-size: 11px;
+            color: #999;
+            line-height: 1.6;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Estilos específicos da dashboard */
+        .wallet-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .wallet-header h2 {
+            font-size: 20px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #2b2b2b;
+            margin-bottom: 10px;
+        }
+        
+        .connection-status {
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(255, 0, 0, 0.05);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+        
+        .connection-status.connected {
+            background-color: rgba(76, 175, 80, 0.05);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .info-card {
+            background: #fcfcfc;
+            padding: 20px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        
+        .info-card h3 {
+            color: #888;
+            margin-bottom: 10px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-card p {
+            font-size: 16px;
+            font-weight: 500;
+            word-break: break-all;
+            color: #333;
+        }
+        
+        .transaction-form {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fcfcfc;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        
+        .transaction-form h3 {
+            text-align: center;
+            color: #d4af37;
+            margin-bottom: 20px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        
+        .qr-code-container {
+            text-align: center;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .qr-code-container h4 {
+            color: #d4af37;
+            margin-bottom: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        
+        .transactions-area {
+            margin-top: 40px;
+            background: #fcfcfc;
+            padding: 20px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        
+        .transactions-area h3 {
+            color: #d4af37;
+            margin-bottom: 20px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        
+        #transaction-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        #transaction-list li {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #eee;
+            font-size: 13px;
+        }
+        
+        #transaction-list li.received .icon,
+        #transaction-list li.received .amount,
+        #transaction-list li.received .type {
+            color: #4caf50;
+        }
+        
+        #transaction-list li.sent .icon,
+        #transaction-list li.sent .amount,
+        #transaction-list li.sent .type {
+            color: #FFA500;
+        }
+
+        .transaction-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .transaction-details .address {
+            font-family: 'Courier New', Courier, monospace;
+            word-break: break-all;
+            color: #888;
+            font-size: 11px;
+        }
+        
+        .transaction-details .type { 
+            font-weight: 500; 
+        }
+        
+        .transaction-value {
+            text-align: right;
+        }
+        
+        .transaction-value .amount {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        #qr-code-canvas {
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .warning-box {
+            background: rgba(255, 0, 0, 0.05);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.4;
+            text-align: center;
+            color: #f44336;
+        }
+        
+        .private-key-display {
+            background: #fcfcfc;
+            padding: 20px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .private-key-display h4 {
+            color: #d4af37;
+            font-weight: 500;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        .private-key-display p {
+            font-family: 'Courier New', Courier, monospace;
+            word-break: break-all;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            text-align: left;
+            margin-bottom: 0;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+        
+        .modal-content p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .modal-content button {
+            width: auto;
+            padding: 10px 30px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            border-top-color: #d4af37;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Estilos para a seção de Segurança e Transparência */
+        .security-section {
+            margin-top: 40px;
+            background: #fcfcfc;
+            padding: 20px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        
+        .security-section h3 {
+            color: #d4af37;
+            margin-bottom: 20px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        
+        .security-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .security-feature {
+            background: #fff;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            text-align: center;
+        }
+        
+        .security-feature i {
+            font-size: 24px;
+            color: #d4af37;
+            margin-bottom: 10px;
+        }
+        
+        .security-feature h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .security-feature p {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .security-button {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Estilos para o botão FAQ */
+        .faq-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: #2b2b2b;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .faq-button:hover {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+            border-color: #d4af37;
+        }
+
+        /* Estilos para o explorador Polygon */
+        .explorer-section {
+            margin-top: 40px;
+            background: #fcfcfc;
+            padding: 20px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        
+        .explorer-section h3 {
+            color: #d4af37;
+            margin-bottom: 20px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            border-radius: 6px;
+            background: #fcfcfc;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            background: linear-gradient(to right, #d4af37, #f4e4b8);
+            color: #2a2a2a;
+            border-color: #d4af37;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .token-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .token-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+        
+        .token-item:hover {
+            background: #f9f9f9;
+        }
+        
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .token-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(to right, #d4af37, #f4e4b8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            color: #2a2a2a;
+        }
+        
+        .token-name {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .token-symbol {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .token-fullname {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .token-value {
+            text-align: right;
+        }
+        
+        .token-balance {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .token-price {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Estilos para o botão de verificação de transação */
+        .verify-button {
+            background: linear-gradient(to right, #4caf50, #8bc34a);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .verify-button:hover {
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        /* Estilos para o botão de desconectar */
+        .disconnect-button {
+            background: linear-gradient(to right, #f44336, #ff9800);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .disconnect-button:hover {
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+        }
+
+        /* Estilos para o botão de copiar endereço */
+        .copy-button {
+            background: transparent;
+            color: #d4af37;
+            border: 1px solid #d4af37;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-button:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        /* Estilos para o botão de mostrar/ocultar saldo */
+        .toggle-balance {
+            background: transparent;
+            color: #888;
+            border: 1px solid #eee;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-balance:hover {
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+
+        /* Estilos para o botão de adicionar token */
+        .add-token-button {
+            background: linear-gradient(to right, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .add-token-button:hover {
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        /* Estilos para o botão de histórico de transações */
+        .history-button {
+            background: linear-gradient(to right, #9C27B0, #E91E63);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .history-button:hover {
+            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="wallet-container">
+        <header>
+            <div class="logo">
+                <h1>Exclusive Wallet</h1>
+                <span>POLYGON</span>
+            </div>
+            <div class="header-buttons">
+                <button class="btn btn-secondary btn-small" id="theme-toggle"><i class="fas fa-moon"></i></button>
+                <button class="btn btn-secondary btn-small" id="language-toggle"><i class="fas fa-globe"></i></button>
+            </div>
+        </header>
+        
+<div id="login-section">
+            <div class="input-group">
+                <label for="email">Email de Acesso</label>
+                <input type="email" id="email" placeholder="Insira seu email">
+            </div>
+            
+            <div class="input-group">
+                <label for="access-password">Senha de Acesso</label>
+                <div class="password-group">
+                    <input type="password" id="access-password" placeholder="Insira sua senha">
+                    <span id="toggle-access-password" style="cursor: pointer;"><i class="fas fa-eye"></i></span>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" id="login-email-button">Entrar com Email</button>
+            
+            <div class="divider"><span>ou acesse com sua chave</span></div>
+            <div class="input-group">
+                <label for="private-key">Chave Privada</label>
+                <div class="password-group">
+                    <input type="password" id="private-key" placeholder="Insira sua chave privada">
+                    <span id="toggle-password"><i class="fas fa-eye"></i></span>
+                </div>
+            </div>
+            
+            <button class="btn btn-secondary" id="connect-button">Conectar com Chave Privada</button>
+            
+            <div class="divider"><span>ou</span></div>
+            
+            <button class="btn btn-secondary" id="create-wallet-button">Criar Nova Carteira</button>
+            
+            <div class="warning-box">
+                <i class="fas fa-exclamation-triangle"></i> Nunca compartilhe sua chave privada. Esta carteira é executada apenas no seu navegador.
+            </div>
+        </div>
+        
+        <div id="dashboard-section" class="hidden">
+            <div class="wallet-header">
+                <h2>Sua Carteira Exclusive</h2>
+                <p>Rede Polygon (MATIC)</p>
+            </div>
+            
+            <div class="connection-status" id="connection-status">
+                <i class="fas fa-spinner loading"></i> Conectando à rede Polygon...
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Endereço da Carteira</h3>
+                    <p id="wallet-address">-</p>
+                    <button class="copy-button" id="copy-address"><i class="fas fa-copy"></i> Copiar</button>
+                </div>
+                <div class="info-card">
+                    <h3>Saldo (MATIC)</h3>
+                    <p id="wallet-balance">-</p>
+                    <button class="toggle-balance" id="toggle-balance"><i class="fas fa-eye"></i> Mostrar/Ocultar</button>
+                </div>
+                <div class="info-card">
+                    <h3>Valor Total (USD)</h3>
+                    <p id="total-value">-</p>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="send">Enviar</div>
+                <div class="tab" data-tab="receive">Receber</div>
+                <div class="tab" data-tab="tokens">Tokens</div>
+            </div>
+            
+            <div class="tab-content active" id="send-tab">
+                <div class="transaction-form">
+                    <h3>Enviar Fundos</h3>
+                    <div class="input-group">
+                        <label for="recipient-address">Endereço do Destinatário</label>
+                        <input type="text" id="recipient-address" placeholder="0x...">
+                    </div>
+                    <div class="input-group">
+                        <label for="amount">Quantidade (MATIC)</label>
+                        <input type="number" id="amount" placeholder="0.0" step="any">
+                    </div>
+                    <div class="input-group">
+                        <label for="token-select">Token</label>
+                        <select id="token-select">
+                            <option value="MATIC">MATIC (nativo)</option>
+                            <!-- Tokens serão adicionados dinamicamente -->
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="send-button">Enviar Transação</button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="receive-tab">
+                <div class="qr-code-container">
+                    <h4>Seu Endereço para Receber</h4>
+                    <div id="qr-code-canvas"></div>
+                    <p id="receive-address">-</p>
+                    <button class="copy-button" id="copy-receive-address"><i class="fas fa-copy"></i> Copiar Endereço</button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="tokens-tab">
+                <div class="input-group">
+                    <input type="text" id="token-search" placeholder="Buscar token por nome ou símbolo...">
+                </div>
+                <div class="token-list" id="token-list">
+                    <!-- Tokens serão carregados aqui -->
+                </div>
+            </div>
+            
+            <div class="transactions-area">
+                <h3>Últimas Transações</h3>
+                <ul id="transaction-list">
+                    <li class="received">
+                        <div class="transaction-details">
+                            <span class="type">Recebido</span>
+                            <span class="address">De: 0x742d35Cc6634C0532925a3b844Bc454e4438f44e</span>
+                        </div>
+                        <div class="transaction-value">
+                            <div class="amount">+0.5 MATIC</div>
+                            <div class="date">12 Nov 2023</div>
+                        </div>
+                    </li>
+                    <li class="sent">
+                        <div class="transaction-details">
+                            <span class="type">Enviado</span>
+                            <span class="address">Para: 0x742d35Cc6634C0532925a3b844Bc454e4438f44e</span>
+                        </div>
+                        <div class="transaction-value">
+                            <div class="amount">-1.2 MATIC</div>
+                            <div class="date">10 Nov 2023</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="security-section">
+                <h3>Segurança e Transparência</h3>
+                <div class="security-features">
+                    <div class="security-feature">
+                        <i class="fas fa-lock"></i>
+                        <h4>Chave Privada Local</h4>
+                        <p>Sua chave privada é armazenada apenas localmente no seu navegador.</p>
+                    </div>
+                    <div class="security-feature">
+                        <i class="fas fa-code"></i>
+                        <h4>Código Aberto</h4>
+                        <p>Este projeto é de código aberto e auditável por qualquer pessoa.</p>
+                    </div>
+                    <div class="security-feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>Sem Custódia</h4>
+                        <p>Nós não temos acesso às suas chaves ou fundos em nenhum momento.</p>
+                    </div>
+                </div>
+                <div class="security-button">
+                    <button class="btn btn-secondary" id="show-private-key">Mostrar Chave Privada</button>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>Exclusive Wallet &copy; 2023. Todos os direitos reservados.</p>
+                <p>Esta interface não coleta dados pessoais. Use com responsabilidade.</p>
+            </div>
+            
+            <button class="disconnect-button" id="disconnect-button"><i class="fas fa-power-off"></i> Desconectar</button>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="private-key-modal">
+        <div class="modal-content">
+            <h3>Sua Chave Privada</h3>
+            <div class="private-key-display">
+                <p id="modal-private-key"></p>
+            </div>
+            <p>AVISO: Nunca compartilhe esta chave com ninguém. Quem tiver acesso a ela pode controlar seus fundos.</p>
+            <button class="btn btn-primary" id="close-modal">Fechar</button>
+        </div>
+    </div>
+    
+    <button class="faq-button" id="faq-button"><i class="fas fa-question-circle"></i> FAQ & Ajuda</button>
+
+    <script>
+        // Configuração da API da CoinMarketCap
+        const CMC_API_KEY = 'e04980c1-d7dc-4b28-8f86-ede8970a4425';
+        const CMC_BASE_URL = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest';
+
+        // Lista interna de tokens (não será exibida diretamente na página)
+        const internalTokens = [
+            { symbol: 'USDC', name: 'USD Coin', address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', decimals: 6, icon: 'USDC icon' },
+            { symbol: 'LINK', name: 'Chainlink', address: '0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39', decimals: 18, icon: 'LINK icon' },
+            { symbol: 'UNI', name: 'Uniswap', address: '0xb33EaAd8d922B1083446DC23f610c2567fB5180f', decimals: 18, icon: 'UNI icon' },
+            { symbol: 'AAVE', name: 'Aave', address: '0xD6DF932A45C0f255f85145f286eA0b292B21C90B', decimals: 18, icon: 'AAVE icon' },
+            { symbol: 'POL', name: 'Polygon Ecosystem Token', address: '0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6', decimals: 18, icon: 'POL icon' },
+            { symbol: 'BONK', name: 'Bonk', address: '0xE5B49820e5d106254B2fC671Bf681f6d1a7DeDc4', decimals: 5, icon: 'BONK icon' },
+            { symbol: 'CRV', name: 'Curve DAO', address: '0x172370d5Cd63279eFa6d502DAB29171933a610AF', decimals: 18, icon: 'CRV icon' },
+            { symbol: 'LDO', name: 'Lido DAO Token', address: '0xC3C7d422809852031b44ab29EEC9F1EfF2A58756', decimals: 18, icon: 'LDO icon' },
+            { symbol: 'GRT', name: 'The Graph', address: '0x5fe2B58c013d7601147DcdD68C143A77499f5531', decimals: 18, icon: 'GRT icon' },
+            { symbol: 'SAND', name: 'The Sandbox', address: '0xBbba073C31bF03b8ACf7c28EF0738DeCF3695683', decimals: 18, icon: 'SAND icon' },
+            { symbol: 'TBTC', name: 'tBTC', address: '0x0f611F2582E6F641c1a07b3C70c273c662aA5fB8', decimals: 18, icon: 'TBTC icon' },
+            { symbol: 'MANA', name: 'Decentraland', address: '0xA1c57f48F0Deb89f569dFbE6E2B7f46D33606fD4', decimals: 18, icon: 'MANA icon' },
+            { symbol: 'COMP', name: 'Compound', address: '0x8505b9d2254A7Ae468c0E9dd10Ccea3A837aef5c', decimals: 18, icon: 'COMP icon' },
+            { symbol: 'SUPER', name: 'SuperVerse', address: '0xa1428174F516F527fafdD146b883bB4428682737', decimals: 18, icon: 'SUPER icon' },
+            { symbol: '1INCH', name: '1inch', address: '0x9c2C5fd7b07E95EE044DDeba0E97a665F142394f', decimals: 18, icon: '1INCH icon' },
+            { symbol: 'FXS', name: 'Frax Share', address: '0x1a3acf6D19267E2d3e7f898f42803e90C9219062', decimals: 18, icon: 'FXS icon' },
+            { symbol: 'BAT', name: 'Basic Attention Token', address: '0x3Cef98bb43d732E2F285eE605a8158cDE967D219', decimals: 18, icon: 'BAT icon' },
+            { symbol: 'SNX', name: 'Synthetix Network Token', address: '0x50B728D8D964fd00C2d0AAD81718b71311feF68a', decimals: 18, icon: 'SNX icon' },
+            { symbol: 'OM', name: 'Mantra', address: '0x62414D03084EeB269E18C970a21f45D2967F0170', decimals: 18, icon: 'OM icon' },
+            { symbol: 'ZRO', name: 'LayerZero', address: '0x9F3c3d2950297c0C7f7cB115F6F60b6d78F5e7a9', decimals: 18, icon: 'ZRO icon' },
+            { symbol: 'YFI', name: 'yearn.finance', address: '0xDA537104D6A5edd53c6fBba9A898708E465260b6', decimals: 18, icon: 'YFI icon' },
+            { symbol: 'COW', name: 'CoW Protocol', address: '0x0a0C6E59526F5F7e0e70E5B1D7170B6aF8D0e5e5', decimals: 18, icon: 'COW icon' },
+            { symbol: 'STG', name: 'Stargate Finance', address: '0x2F6F07CDcf3588944Bf4C42aC74ff24bF56e7590', decimals: 18, icon: 'STG icon' },
+            { symbol: 'SUSHI', name: 'Sushi', address: '0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a', decimals: 18, icon: 'SUSHI icon' },
+            { symbol: 'ANKR', name: 'Ankr Network', address: '0x101A023270368c0D50BFfb62780F4aFd4ea79C35', decimals: 18, icon: 'ANKR icon' },
+            { symbol: 'RPL', name: 'Rocket Pool', address: '0x7205705771547cF792011173076C4f81D2B5c6D3', decimals: 18, icon: 'RPL icon' },
+            { symbol: 'ZIG', name: 'ZigChain', address: '0x4B2e76EbBc9f2923d83F5F13eA8c9766c5Fc0d75', decimals: 18, icon: 'ZIG icon' },
+            { symbol: 'GMT', name: 'STEPN', address: '0x7Ddc52c4De30e94Be3A6A0A2b259b2850F421989', decimals: 18, icon: 'GMT icon' },
+            { symbol: 'WOO', name: 'WOO Network', address: '0x1B815d120B3eF02039Ee11dC5d3549F4Cd8a5d0b', decimals: 18, icon: 'WOO icon' },
+            { symbol: 'YGG', name: 'Yield Guild Games', address: '0x82617aA52dddf5Ed9Bb7B370ED777b3182A30fd1', decimals: 18, icon: 'YGG icon' }
+        ];
+
+        // Elementos DOM
+        const loginSection = document.getElementById('login-section');
+        const dashboardSection = document.getElementById('dashboard-section');
+        const connectButton = document.getElementById('connect-button');
+        const createWalletButton = document.getElementById('create-wallet-button');
+        const privateKeyInput = document.getElementById('private-key');
+        const togglePassword = document.getElementById('toggle-password');
+        const walletAddress = document.getElementById('wallet-address');
+        const walletBalance = document.getElementById('wallet-balance');
+        const totalValue = document.getElementById('total-value');
+        const connectionStatus = document.getElementById('connection-status');
+        const disconnectButton = document.getElementById('disconnect-button');
+        const showPrivateKeyButton = document.getElementById('show-private-key');
+        const privateKeyModal = document.getElementById('private-key-modal');
+        const modalPrivateKey = document.getElementById('modal-private-key');
+        const closeModal = document.getElementById('close-modal');
+        const copyAddressButton = document.getElementById('copy-address');
+        const copyReceiveAddressButton = document.getElementById('copy-receive-address');
+        const receiveAddress = document.getElementById('receive-address');
+        const qrCodeCanvas = document.getElementById('qr-code-canvas');
+        const sendButton = document.getElementById('send-button');
+        const recipientAddress = document.getElementById('recipient-address');
+        const amountInput = document.getElementById('amount');
+        const tokenSelect = document.getElementById('token-select');
+        const toggleBalanceButton = document.getElementById('toggle-balance');
+        const tokenList = document.getElementById('token-list');
+        const tokenSearch = document.getElementById('token-search');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Variáveis globais
+        let wallet;
+        let provider;
+        let balanceHidden = false;
+        let qrCode;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se há uma chave privada salva
+            const savedPrivateKey = localStorage.getItem('walletPrivateKey');
+            if (savedPrivateKey) {
+                privateKeyInput.value = savedPrivateKey;
+            }
+            
+            // Configurar tabs
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Remover classe active de todas as tabs e conteúdos
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    // Adicionar classe active à tab clicada
+                    tab.classList.add('active');
+                    
+                    // Mostrar o conteúdo correspondente
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+            
+            // Inicializar lista de tokens no select
+            internalTokens.forEach(token => {
+                const option = document.createElement('option');
+                option.value = token.symbol;
+                option.textContent = `${token.symbol} - ${token.name}`;
+                tokenSelect.appendChild(option);
+            });
+            
+            // Carregar tokens na lista
+            loadTokenList();
+            
+            // Configurar busca de tokens
+            tokenSearch.addEventListener('input', filterTokens);
+        });
+
+        // Conectar à carteira
+        connectButton.addEventListener('click', connectWallet);
+
+        // Criar nova carteira
+        createWalletButton.addEventListener('click', createNewWallet);
+
+        // Mostrar/Ocultar senha
+        togglePassword.addEventListener('click', function() {
+            if (privateKeyInput.type === 'password') {
+                privateKeyInput.type = 'text';
+                togglePassword.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                privateKeyInput.type = 'password';
+                togglePassword.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        });
+
+        // Mostrar chave privada
+        showPrivateKeyButton.addEventListener('click', function() {
+            modalPrivateKey.textContent = localStorage.getItem('walletPrivateKey') || '';
+            privateKeyModal.style.display = 'flex';
+        });
+
+        // Fechar modal
+        closeModal.addEventListener('click', function() {
+            privateKeyModal.style.display = 'none';
+        });
+
+        // Copiar endereço
+        copyAddressButton.addEventListener('click', function() {
+            navigator.clipboard.writeText(walletAddress.textContent);
+            alert('Endereço copiado para a área de transferência!');
+        });
+
+        // Copiar endereço de recebimento
+        copyReceiveAddressButton.addEventListener('click', function() {
+            navigator.clipboard.writeText(receiveAddress.textContent);
+            alert('Endereço copiado para a área de transferência!');
+        });
+
+        // Desconectar
+        disconnectButton.addEventListener('click', function() {
+            localStorage.removeItem('walletPrivateKey');
+            loginSection.classList.remove('hidden');
+            dashboardSection.classList.add('hidden');
+        });
+
+        // Enviar transação
+        sendButton.addEventListener('click', sendTransaction);
+
+        // Mostrar/Ocultar saldo
+        toggleBalanceButton.addEventListener('click', function() {
+            balanceHidden = !balanceHidden;
+            updateBalanceDisplay();
+        });
+
+        // Função para conectar à carteira
+        function connectWallet() {
+            const privateKey = privateKeyInput.value.trim();
+            
+            if (!privateKey) {
+                alert('Por favor, insira uma chave privada válida.');
+                return;
+            }
+            
+            try {
+                // Conectar à rede Polygon
+                provider = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com');
+                
+                // Criar carteira
+                wallet = new ethers.Wallet(privateKey, provider);
+                
+                // Salvar chave privada no localStorage
+                localStorage.setItem('walletPrivateKey', privateKey);
+                
+                // Atualizar UI
+                loginSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+                
+                // Carregar informações da carteira
+                loadWalletInfo();
+                
+            } catch (error) {
+                console.error('Erro ao conectar carteira:', error);
+                alert('Erro ao conectar à carteira. Verifique a chave privada.');
+            }
+        }
+
+        // Função para criar nova carteira
+        function createNewWallet() {
+            // Gerar nova carteira
+            const newWallet = ethers.Wallet.createRandom();
+            
+            // Preencher o campo da chave privada
+            privateKeyInput.value = newWallet.privateKey;
+            
+            // Alertar o usuário
+            alert('Nova carteira criada. Certifique-se de salvar a chave privada em um local seguro antes de conectar.');
+        }
+
+        // Função para carregar informações da carteira
+        async function loadWalletInfo() {
+            if (!wallet || !provider) return;
+            
+            try {
+                // Atualizar status de conexão
+                connectionStatus.innerHTML = '<i class="fas fa-spinner loading"></i> Conectando à rede Polygon...';
+                
+                // Obter endereço
+                const address = wallet.address;
+                walletAddress.textContent = address;
+                receiveAddress.textContent = address;
+                
+                // Gerar QR Code
+                if (qrCode) {
+                    qrCode.clear();
+                    qrCode.makeCode(address);
+                } else {
+                    qrCode = new QRCode(qrCodeCanvas, {
+                        text: address,
+                        width: 128,
+                        height: 128
+                    });
+                }
+                
+                // Obter saldo
+                const balance = await provider.getBalance(address);
+                const balanceInMatic = ethers.utils.formatEther(balance);
+                
+                // Atualizar saldo
+                walletBalance.setAttribute('data-balance', balanceInMatic);
+                updateBalanceDisplay();
+                
+                // Obter valor em USD usando a API da CoinMarketCap
+                try {
+                    const maticPrice = await getTokenPrice('MATIC');
+                    const balanceUSD = (parseFloat(balanceInMatic) * maticPrice).toFixed(2);
+                    totalValue.textContent = `$${balanceUSD} USD`;
+                } catch (error) {
+                    console.error('Erro ao obter preço do MATIC:', error);
+                    totalValue.textContent = 'Indisponível';
+                }
+                
+                // Atualizar status de conexão
+                connectionStatus.innerHTML = '<i class="fas fa-check-circle"></i> Conectado à rede Polygon';
+                connectionStatus.classList.add('connected');
+                
+            } catch (error) {
+                console.error('Erro ao carregar informações da carteira:', error);
+                connectionStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Erro ao conectar à rede Polygon';
+            }
+        }
+
+        // Função para atualizar a exibição do saldo
+        function updateBalanceDisplay() {
+            const balance = walletBalance.getAttribute('data-balance');
+            if (balance && !balanceHidden) {
+                walletBalance.textContent = `${parseFloat(balance).toFixed(4)} MATIC`;
+                toggleBalanceButton.innerHTML = '<i class="fas fa-eye-slash"></i> Ocultar';
+            } else if (balance) {
+                walletBalance.textContent = '••••••••';
+                toggleBalanceButton.innerHTML = '<i class="fas fa-eye"></i> Mostrar';
+            }
+        }
+
+        // Função para enviar transação
+        async function sendTransaction() {
+            if (!wallet) {
+                alert('Por favor, conecte sua carteira primeiro.');
+                return;
+            }
+            
+            const toAddress = recipientAddress.value.trim();
+            const amount = amountInput.value.trim();
+            const selectedToken = tokenSelect.value;
+            
+            if (!toAddress || !amount) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+            
+            try {
+                // Verificar se o endereço é válido
+                if (!ethers.utils.isAddress(toAddress)) {
+                    alert('Por favor, insira um endereço válido.');
+                    return;
+                }
+                
+                // Verificar se o valor é válido
+                if (parseFloat(amount) <= 0) {
+                    alert('Por favor, insira um valor válido.');
+                    return;
+                }
+                
+                // Enviar transação
+                if (selectedToken === 'MATIC') {
+                    // Enviar MATIC
+                    const tx = {
+                        to: toAddress,
+                        value: ethers.utils.parseEther(amount)
+                    };
+                    
+                    const transaction = await wallet.sendTransaction(tx);
+                    alert(`Transação enviada! Hash: ${transaction.hash}`);
+                } else {
+                    // Enviar token ERC-20
+                    const token = internalTokens.find(t => t.symbol === selectedToken);
+                    if (!token) {
+                        alert('Token selecionado não encontrado.');
+                        return;
+                    }
+                    
+                    // Aqui você precisaria implementar a lógica para enviar tokens ERC-20
+                    // usando a ABI do contrato e o método transfer
+                    alert(`Funcionalidade de envio de ${selectedToken} em desenvolvimento.`);
+                }
+                
+                // Limpar campos
+                recipientAddress.value = '';
+                amountInput.value = '';
+                
+                // Atualizar saldo
+                loadWalletInfo();
+                
+            } catch (error) {
+                console.error('Erro ao enviar transação:', error);
+                alert('Erro ao enviar transação. Verifique o saldo e tente novamente.');
+            }
+        }
+
+        // Função para carregar lista de tokens
+        async function loadTokenList() {
+            tokenList.innerHTML = '';
+            
+            // Adicionar MATIC primeiro
+            const maticItem = createTokenElement({
+                symbol: 'MATIC',
+                name: 'Polygon',
+                balance: walletBalance.getAttribute('data-balance') || '0',
+                isNative: true
+            });
+            tokenList.appendChild(maticItem);
+            
+            // Adicionar tokens da lista interna
+            for (const token of internalTokens) {
+                // Aqui você normalmente obteria o saldo do token para o endereço da carteira
+                // Por enquanto, vamos usar um valor fictício
+                const balance = '0'; // Saldo fictício
+                
+                const tokenItem = createTokenElement({
+                    symbol: token.symbol,
+                    name: token.name,
+                    balance: balance,
+                    isNative: false
+                });
+                
+                tokenList.appendChild(tokenItem);
+            }
+        }
+
+        // Função para criar elemento de token
+        function createTokenElement(token) {
+            const li = document.createElement('li');
+            li.className = 'token-item';
+            
+            li.innerHTML = `
+                <div class="token-info">
+                    <div class="token-icon">${token.symbol.charAt(0)}</div>
+                    <div class="token-name">
+                        <span class="token-symbol">${token.symbol}</span>
+                        <span class="token-fullname">${token.name}</span>
+                    </div>
+                </div>
+                <div class="token-value">
+                    <div class="token-balance">${token.balance}</div>
+                    <div class="token-price">Carregando...</div>
+                </div>
+            `;
+            
+            // Obter preço do token
+            getTokenPrice(token.symbol)
+                .then(price => {
+                    const priceElement = li.querySelector('.token-price');
+                    if (price) {
+                        const balanceValue = (parseFloat(token.balance) * price).toFixed(2);
+                        priceElement.textContent = `$${balanceValue} USD ($${price.toFixed(4)})`;
+                    } else {
+                        priceElement.textContent = 'Preço indisponível';
+                    }
+                })
+                .catch(error => {
+                    console.error(`Erro ao obter preço de ${token.symbol}:`, error);
+                    li.querySelector('.token-price').textContent = 'Erro ao carregar preço';
+                });
+            
+            return li;
+        }
+
+        // Função para filtrar tokens
+        function filterTokens() {
+            const searchTerm = tokenSearch.value.toLowerCase();
+            const tokenItems = tokenList.querySelectorAll('.token-item');
+            
+            tokenItems.forEach(item => {
+                const symbol = item.querySelector('.token-symbol').textContent.toLowerCase();
+                const name = item.querySelector('.token-fullname').textContent.toLowerCase();
+                
+                if (symbol.includes(searchTerm) || name.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Função para obter preço do token da CoinMarketCap
+        async function getTokenPrice(symbol) {
+            // Mapeamento de símbolos para IDs da CoinMarketCap
+            const symbolToId = {
+                'MATIC': 3890,
+                'USDC': 3408,
+                'LINK': 1975,
+                'UNI': 7083,
+                'AAVE': 7278,
+                'POL': 15378, // Polygon Ecosystem Token
+                'BONK': 23095, // Bonk
+                'CRV': 6538, // Curve DAO Token
+                'LDO': 8000, // Lido DAO
+                'GRT': 6719, // The Graph
+                'SAND': 6210, // The Sandbox
+                'TBTC': 5776, // tBTC
+                'MANA': 1966, // Decentraland
+                'COMP': 5692, // Compound
+                'SUPER': 10903, // SuperVerse
+                '1INCH': 8104, // 1inch
+                'FXS': 6953, // Frax Share
+                'BAT': 1697, // Basic Attention Token
+                'SNX': 2586, // Synthetix Network Token
+                'OM': 8916, // MANTRA
+                'ZRO': 28177, // LayerZero
+                'YFI': 5864, // yearn.finance
+                'COW': 14978, // CoW Protocol
+                'STG': 17733, // Stargate Finance
+                'SUSHI': 6758, // Sushi
+                'ANKR': 3783, // Ankr Network
+                'RPL': 2943, // Rocket Pool
+                'ZIG': 20131, // ZIGChain
+                'GMT': 18069, // STEPN
+                'WOO': 7501, // WOO Network
+                'YGG': 10688 // Yield Guild Games
+            };
+            
+            const coinId = symbolToId[symbol];
+            
+            if (!coinId) {
+                console.warn(`ID da CoinMarketCap não encontrado para o símbolo: ${symbol}`);
+                return null;
+            }
+            
+            try {
+                const response = await fetch(`${CMC_BASE_URL}?id=${coinId}`, {
+                    headers: {
+                        'X-CMC_PRO_API_KEY': CMC_API_KEY
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro na API: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data.data[coinId].quote.USD.price;
+            } catch (error) {
+                console.error(`Erro ao obter preço para ${symbol}:`, error);
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>
